@@ -74,16 +74,34 @@ with open(bin_file,'rb') as myfile:
                 myfile.seek(cur_offset + 6)
                 headerfile.write(myfile.read(nbytes))
 
-        # Everything appears to be stored as signed or maybe unsigned int32
-        # Date is year, month, day, hour, minute, second starting at offset 8
-        # 0x38 appears to be proportional to exposure time, but has different meaning whether HDR3 or HDR6
-        # shuttertime * 7680 for HDR6
-        # shuttertime * 30840 for HDR3
-        # 0x44 is ISO/6.25
-        # Offset 0x68 = EV offset divided by 3
-        # 0x70 = 2 for HDR3, 4 for HDR6, but not the only thing that is used to differentiate.  Repacking as 3-shot without changing this will cause PM to ignore the file
-        #   but changing this and repacking will cause PM to recognize the file, but still display as HDR6 and fail to stitch
-        # 
+            # Everything appears to be stored as signed or maybe unsigned int32
+            # Date is year, month, day, hour, minute, second starting at offset 8
+            # 0x38 appears to be proportional to exposure time, but has different meaning whether HDR3 or HDR6
+            # shuttertime * 7680 for HDR6
+            # shuttertime * 30840 for HDR3
+            # 0x44 is ISO/6.25
+            # Offset 0x68 = EV offset divided by 3
+            # 0x70 = 2 for HDR3, 4 for HDR6, but not the only thing that is used to differentiate.  Repacking as 3-shot without changing this will cause PM to ignore the file
+            #   but changing this and repacking will cause PM to recognize the file, but still display as HDR6 and fail to stitch
+
+            # Offsets from Ghidra decompilation of PanoManager's header parser function.  These are int offsets, multiply by 4 to get byte offsets
+            # 0 = model.  2 = S, 3 = S2, 4 = X2, anything else is currently Scan.  FIXME:  Find model ID from a Scan ORI
+            # 0x1c = HDR mode.  Value less than 4 is HDR3, value less than 6 (5 by process of elimination) is HDR6, otherwise HDR6+
+            # LSB appears to be AE mode.  0 = Manual, 1 = Auto
+            # 0x3a = Shot count? if nonzero.  If zero, shot count appears to depend on HDR mode: 1 for mode < 4 (HDR3), 3 otherwise.  Maybe lens index for displayed metadata since this appears to be middle shot?
+            # Xphase carefully clamps this to a value between 0 and 5 inclusive
+            # and shot count of 0 for HDR3 is old firmware behavior
+            # Bunch of shot-specific data in two groups:
+            # iVar15 = 0xa + shotnum*4 for shotnum < 3, 0x2e + (shotnum-3)*4 else
+            # iVar10 = add 2 to all offsets for iVar15
+            # iVar5 = add 1 to all iVar10 offsets
+            # 1 is an unused offset in the function I'm looking at
+            # Later on in parser:
+            #   local_3c8 = (longlong **)
+            #  CONCAT44(local_3c8._4_4_,(int)(iVar5 * 100 + (iVar5 * 100 >> 0x1f & 0xfU)) >> 4); - ISO???
+            # also
+            #  dVar16 = (double)(iVar10 * iVar15) / 120000000.0; - exposure time?  Since 0xe int offset = 0x38 byte offset
+            # Some string is "NO" unless 0x2c and 0x2d are nonzero, it becomes "OK" then - looks like GPS, probably lat and long
         elif(blocktype == -40):
             print("\tSmall lens data blocks (32 bytes per lens)")
             with open('smallblock.bin', 'wb') as smallblockfile:
