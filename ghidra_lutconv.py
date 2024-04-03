@@ -263,7 +263,7 @@ local_218[255] = 0xff0;
 
 lut1 = local_218
 
-
+pprint(lut1)
 plt.plot(lut1)
 
 lut2 = np.zeros(257).astype(np.uint16)
@@ -353,7 +353,10 @@ color_matrix[5] = 0x11dd;
 color_matrix[6] = 0x989;
 color_matrix[7] = 0xef8;
 color_matrix[8] = 0x4519;
+lut2_numpy = np.round(np.interp(np.arange(256)*16, lut1, np.arange(256)*16)).astype(np.uint16)
 pprint(lut2)
+pprint(lut2_numpy)
+
 pprint(color_matrix)
 red = 23
 green = 23
@@ -369,6 +372,7 @@ dgreen = ((color_matrix[6] * blue +
                 color_matrix[7] * green + 0x200) >> 10) + -0x380;
 plt.figure()
 plt.plot(lut2)
+plt.plot(np.interp(np.arange(256)*16, lut1, np.arange(256)*16))
 plt.figure()
 plt.plot(lut3)
 plt.figure()
