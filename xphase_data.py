@@ -42,6 +42,7 @@ class XphaseTransforms:
         # Also pulled from PanoMakerPro.dll using Ghidra
         self.jpeg_to_raw_matrix = np.array([17666,  3471,  2812,  4951, 14813,  4573,  2441,  3832, 17689], dtype=np.int16).reshape((3,3))
 
+        self.raw_to_jpeg_matrix = np.linalg.inv(self.jpeg_to_raw_matrix/16384.0) # Normalize our reverse matrix
 
     def jpeg_to_raw(self, imagedata):
         # Invert Xphase's poorly designed JPEG pipeline
@@ -64,3 +65,19 @@ class XphaseTransforms:
         # Xphase adds 1 to everything on export.  WHY?  This will cause a black level offset in the shadows
         # FIXME:  Make this behavior an option
         return rawdata + 1
+
+    def raw_to_jpeg(self, rawdata):
+        h = rawdata.shape[0]
+        w = rawdata.shape[1]
+        rawdata = rawdata.reshape((w*h, 3))
+        rawdata -= 1
+        jpegdata = rawdata + 0x380 #Xphase's silly black level offset
+        jpegdata /= 16.0 #Convert to a 0-4080 range
+        print(np.amax(jpegdata))
+        jpegdata = np.matmul(self.raw_to_jpeg_matrix, jpegdata.T).T
+        jpegdata = np.round(jpegdata).astype(np.int32)
+        jpegdata = np.clip(jpegdata, 0, 0xff0).astype(np.uint16)
+        print(np.amax(jpegdata))
+        jpegdata = np.round(np.interp(jpegdata,np.arange(256)*16, self.lut)/16.0)
+
+        return jpegdata
