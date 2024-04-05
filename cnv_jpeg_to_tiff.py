@@ -40,6 +40,9 @@ jpeg_file = args['input']
 filebase = os.path.splitext(jpeg_file)[0]
 tifname = filebase + '.tif'
 
+xphase_exif = {'Exif.Image.Make': 'Xphase',
+               'Exif.Image.Model': 'Xphase'}
+
 with open(args['input'], 'rb') as jpgfile:
     #Swap BGR to RGB
     bgrdata = jpeg.decode(jpgfile.read())
@@ -61,3 +64,6 @@ with open(args['input'], 'rb') as jpgfile:
                 compression='zlib',
                 predictor=True,
                 extratags=[('InterColorProfile', tifffile.DATATYPE.BYTE, len(icc_profile), icc_profile)])
+
+    with pyexiv2.Image(tifname) as tif:
+      tif.modify_exif(xphase_exif)
