@@ -1,0 +1,5 @@
+imagecodecs
+numpy
+pyexiv2
+PyTurboJPEG
+tifffile
