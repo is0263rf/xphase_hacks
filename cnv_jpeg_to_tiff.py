@@ -6,7 +6,7 @@ import numpy as np
 import tifffile
 import imagecodecs
 import pyexiv2
-from turbojpeg import TurboJPEG
+from turbojpeg import TurboJPEG, TJPF_RGB
 import argparse
 from xphase_data import XphaseTransforms
 
@@ -50,11 +50,7 @@ xphase_exif = {'Exif.Image.Make': 'Xphase',
                'Exif.Image.Model': 'Xphase'}
 
 with open(args['input'], 'rb') as jpgfile:
-    #Swap BGR to RGB
-    bgrdata = jpeg.decode(jpgfile.read())
-    rgbdata = bgrdata.copy()
-    rgbdata[:,:,0] = bgrdata[:,:,2]
-    rgbdata[:,:,2] = bgrdata[:,:,0]
+    rgbdata = jpeg.decode(jpgfile.read(), pixel_format=TJPF_RGB)
 
     # It seems like every lens except 00, 01, 23, 24 are flipped upside down by PanoManager
     (garbage, lensnum, shotnum) = filebase.split("_",3)
