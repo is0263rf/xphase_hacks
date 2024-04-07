@@ -1,10 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import platform
+import os
 
+TURBOJPEG_DLLS = {'Windows' : os.path.join('pyinstaller_deps', 'libturbojpeg.dll'),
+                    'Linux' : os.path.join('pyinstaller_deps', 'libturbojpeg.so')}
 cnvdng_a = Analysis(
     ['cnv_jpeg_to_dng.py'],
     pathex=[],
-    binaries=[],
+    binaries=[(TURBOJPEG_DLLS[platform.system()], 'turbojpeg.libs')],
     datas=[],
     hiddenimports=[],
     hookspath=['./hooks'],
@@ -37,7 +41,7 @@ cnvdng_exe = EXE(
 cnvtif_a = Analysis(
     ['cnv_jpeg_to_tiff.py'],
     pathex=[],
-    binaries=[],
+    binaries=[(TURBOJPEG_DLLS[platform.system()], 'turbojpeg.libs')],
     datas=[],
     hiddenimports=[],
     hookspath=['./hooks'],
