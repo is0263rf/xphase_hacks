@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import os
+import sys
+import platform
 import numpy as np
 import tifffile as TIFF
 import pyexiv2
@@ -15,9 +17,21 @@ def cm_to_flatrational(input_array):
     retarray[1::2] = 10000
     return retarray
 
+dll_names = {'Windows' : 'libturbojpeg.dll',
+             'Linux' : 'libturbojpeg.so'}
+def init_TurboJPEG():
+    if(hasattr(sys, 'frozen')):
+        #Running under PyInstaller
+        if(getattr(sys, 'frozen') == True):
+            dll_path = os.path.join(getattr(sys, '_MEIPASS'), 'turbojpeg.libs', dll_names[platform.system()])
+            return TurboJPEG(dll_path)
+        else:
+            exit('Running under PyInstaller single-file mode not yet supported')
+    else:
+        return TurboJPEG()
 
 xt = XphaseTransforms()
-jpeg = TurboJPEG()
+jpeg = init_TurboJPEG()
 
 #DNG color matrix as SRATIONAL, pulled from an PanoManager DNG
 dng_color_matrix = [2147483647, 1268696091, -1208266623, 2147483647, -180777967, 2147483647,

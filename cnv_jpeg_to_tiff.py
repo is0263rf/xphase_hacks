@@ -9,16 +9,21 @@ from turbojpeg import TurboJPEG
 import argparse
 from xphase_data import XphaseTransforms
 
-#fugly, find a better solution for generating RATIONAL/SRATIONAL
-def cm_to_flatrational(input_array):
-    retarray = np.ones(input_array.size*2, dtype=np.int32)
-    retarray[0::2] = (input_array.flatten()*10000).astype(np.int32)
-    retarray[1::2] = 10000
-    return retarray
-
+dll_names = {'Windows' : 'libturbojpeg.dll',
+             'Linux' : 'libturbojpeg.so'}
+def init_TurboJPEG():
+    if(hasattr(sys, 'frozen')):
+        #Running under PyInstaller
+        if(getattr(sys, 'frozen') == True):
+            dll_path = os.path.join(getattr(sys, '_MEIPASS'), 'turbojpeg.libs', dll_names[platform.system()])
+            return TurboJPEG(dll_path)
+        else:
+            exit('Running under PyInstaller single-file mode not yet supported')
+    else:
+        return TurboJPEG()
 
 xt = XphaseTransforms()
-jpeg = TurboJPEG()
+jpeg = init_TurboJPEG()
 
 
 #Raw primaries and whitepoint derived from Xphase's ColorMatrix1 in xyY coordinates
