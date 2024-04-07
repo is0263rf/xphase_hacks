@@ -19,7 +19,7 @@ if is_win:
     binaries.append((exiv2api_path, "pyexiv2/lib/py3.11-win"))
 else:
     libexiv2_path = f"{python_lib_path}/pyexiv2/lib/libexiv2.so"
-    exiv2api_path = f"{python_lib_path}/pyexiv2/lib/py3.11-linx/exiv2api.so"
+    exiv2api_path = f"{python_lib_path}/pyexiv2/lib/py3.11-linux/exiv2api.so"
 
     # Append the binary files and their destination paths to the binaries list
     binaries.append((libexiv2_path, "pyexiv2/lib"))
