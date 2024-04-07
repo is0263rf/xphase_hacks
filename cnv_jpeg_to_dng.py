@@ -20,9 +20,10 @@ xt = XphaseTransforms()
 jpeg = TurboJPEG()
 
 #DNG color matrix as SRATIONAL, pulled from an PanoManager DNG
-dng_color_matrix = np.array([2147483647, 1268696091, -1208266623, 2147483647, -180777967, 2147483647,
+dng_color_matrix = [2147483647, 1268696091, -1208266623, 2147483647, -180777967, 2147483647,
                              -826519231, 2147483647, 2147483647, 1937550026, 683803903, 2147483647,
-                             -128558463, 2147483647, 411880927, 2147483647, 2147483647, 2046508879], dtype=np.int32)
+                             -128558463, 2147483647, 411880927, 2147483647, 2147483647, 2046508879]
+
 
 ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--input', required=True,
@@ -56,7 +57,7 @@ with open(args['input'], 'rb') as jpgfile:
     dng_extratags.append(('WhiteLevel', 'I', 1, 65281)) #WhiteLevel
     dng_extratags.append(('DNGVersion', 'B', 4, [1,4,0,0])) #DNGVersion
     dng_extratags.append(('DNGBackwardVersion', 'B', 4, [1,4,0,0])) #DNGBackwardVersion
-    dng_extratags.append(('AsShotNeutral', '2I', 3, np.array([1, 1, 1, 1, 1, 1], dtype=np.uint32))) #Xphase pre-applies a D50 white balance so AsShotNeutral is 1.0, 1.0, 1.0
+    dng_extratags.append(('AsShotNeutral', '2I', 3, [1, 1, 1, 1, 1, 1])) #Xphase pre-applies a D50 white balance so AsShotNeutral is 1.0, 1.0, 1.0 """
 
     with TIFF.TiffWriter(dngname) as dng:
         dng.write(rawdata,
