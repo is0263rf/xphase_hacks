@@ -1,0 +1,43 @@
+name: Build Windows EXEs
+
+on:
+  workflow_dispatch:
+
+  release:
+    types: [published]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name:  Checkout the repo
+        uses: actions/checkout@v4
+
+      - name:  Grab the DLLs
+        run: |
+          oras login -u entropy512 -p "${{ secrets.GITHUB_TOKEN }}" ghcr.io
+          oras pull -o pyinstaller_deps ghcr.io/entropy512/turbojpeg_libs:latest
+
+      - name: Run the build process with Docker
+        uses: addnab/docker-run-action@v3
+        with:
+          image: batonogov/pyinstaller-windows:python-3.11.7
+          options: -v ${{ github.workspace }}:/src/
+          run: |
+            pip install -r requirements.txt
+            pyinstaller --clean -y --dist ./pyi_dist --workpath /tmp xphasetools.spec
+            chown -R --reference=/src /src
+            chmod g+w -R pyi_dist
+
+      - name: Zip the PyInstaller folder
+        run: |
+          ls -al
+          cd pyi_dist
+          zip xphasetools.zip xphasetools -r
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pyi_dist/xphasetools.zip
