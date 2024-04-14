@@ -48,6 +48,7 @@ bin_file = args['input']
 
 (filebase, ext) = bin_file.rsplit('.',1)
 
+conversion_mode = args['dng'] or args['tiff']
 
 with open(bin_file,'rb') as myfile:
     cur_offset = 2
@@ -59,19 +60,21 @@ with open(bin_file,'rb') as myfile:
     while(cur_offset < filelen):
         myfile.seek(cur_offset)
         (blocktype, nbytes) = struct.unpack('<hL', myfile.read(6))
-        print("Block number " + str(blocknum) + " has type " + str(blocktype) +
-              " with length " + str(nbytes) + " at offset " + hex(cur_offset + 6))
+        if not conversion_mode:
+            print("Block number " + str(blocknum) + " has type " + str(blocktype) +
+                " with length " + str(nbytes) + " at offset " + hex(cur_offset + 6))
 
         if(blocktype == -48):
-            print("\tFile header data")
-            if(args['dateheader']):
-                hfilename = 'headerdata_'+filebase+'.bin'
-            else:
-                hfilename = 'headerdata.bin'
             myfile.seek(cur_offset + 6)
             headerdata = myfile.read(nbytes)
-            with open(hfilename, 'wb') as headerfile:
-                headerfile.write(headerdata)
+            if not conversion_mode:
+                print("\tFile header data")
+                if(args['dateheader']):
+                    hfilename = 'headerdata_'+filebase+'.bin'
+                else:
+                    hfilename = 'headerdata.bin'
+                with open(hfilename, 'wb') as headerfile:
+                    headerfile.write(headerdata)
 
             # Everything appears to be stored as signed or maybe unsigned int32
             # Date is year, month, day, hour, minute, second starting at offset 8
@@ -101,47 +104,54 @@ with open(bin_file,'rb') as myfile:
             # also
             #  dVar16 = (double)(iVar10 * iVar15) / 120000000.0; - exposure time?  Since 0xe int offset = 0x38 byte offset
             # Some string is "NO" unless 0x2c and 0x2d are nonzero, it becomes "OK" then - looks like GPS, probably lat and long
+
         elif(blocktype == -40):
-            print("\tSmall lens data blocks (32 bytes per lens)")
-            with open('smallblock.bin', 'wb') as smallblockfile:
+            if not conversion_mode:
                 myfile.seek(cur_offset + 6)
-                smallblockfile.write(myfile.read(nbytes))
+                print("\tSmall lens data blocks (32 bytes per lens)")
+                with open('smallblock.bin', 'wb') as smallblockfile:
+                    smallblockfile.write(myfile.read(nbytes))
 
         elif(blocktype == -41):
-            print("\tLarge lens data blocks (3080 bytes per lens)")
-            with open('largeblock.bin', 'wb') as largeblockfile:
+            if not conversion_mode:
                 myfile.seek(cur_offset + 6)
-                largeblockfile.write(myfile.read(nbytes))
+                print("\tLarge lens data blocks (3080 bytes per lens)")
+                with open('largeblock.bin', 'wb') as largeblockfile:
+                    largeblockfile.write(myfile.read(nbytes))
 
         elif(blocktype == -39):
             tablestart = cur_offset + 6
             tablelen = nbytes
             myfile.seek(tablestart)
             oritable = myfile.read(tablelen)
-            with open('oritable.bin', 'wb' ) as tablefile:
-                tablefile.write(oritable)
-            print("\tORI image table found")
+            if not conversion_mode:
+                with open('oritable.bin', 'wb' ) as tablefile:
+                    tablefile.write(oritable)
+                print("\tORI image table found")
 
         elif(blocktype == -45):
             imgstart = cur_offset + 6
-            print("\tImage data block found")
+            if not conversion_mode:
+                print("\tImage data block found")
 
         elif(blocktype == -46):
-            previewstart = cur_offset + 6
-            print("\tSpare duplicate image block found")
-            with open('sparedup.jpg', 'wb') as sparedupfile:
+            if not conversion_mode:
+                previewstart = cur_offset + 6
                 myfile.seek(previewstart)
-                sparedupfile.write(myfile.read(nbytes))
+                print("\tSpare duplicate image block found")
+                with open('sparedup.jpg', 'wb') as sparedupfile:
+                    sparedupfile.write(myfile.read(nbytes))
 
         elif(blocktype == -43):
-            previewstart = cur_offset + 6
-            print("\tUser Nadir image block found")
-            with open('usernadir.jpg', 'wb') as previewfile:
+            if not conversion_mode:
+                previewstart = cur_offset + 6
+                print("\tUser Nadir image block found")
                 myfile.seek(previewstart)
-                previewfile.write(myfile.read(nbytes))
+                with open('usernadir.jpg', 'wb') as previewfile:
+                    previewfile.write(myfile.read(nbytes))
 
         else:
-            print("\tUnknown block type")
+            print("\tUnknown block type" + str(blocktype))
         cur_offset += 6 + nbytes
 
 for entrynum in range(int(tablelen/20)):
