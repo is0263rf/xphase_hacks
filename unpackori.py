@@ -34,6 +34,11 @@ def copypart(src,dest,start,length,bufsize=1024*1024):
                 f2.write(data)
                 length -= chunk
 
+def parse_header(headerdata, shotnum):
+    xphase_exif = {'Exif.Image.Make': 'Xphase',
+                'Exif.Image.Model': 'Xphase'}
+    return xphase_exif
+
 ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--input', required=True,
     help='path to input file')
