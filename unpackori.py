@@ -38,7 +38,10 @@ ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--input', required=True,
     help='path to input file')
 
-ap.add_argument('-d', '--dateheader', action='store_true')
+ap.add_argument('--dateheader', action='store_true')
+ap.add_argument('-d', '--dng', action='store_true')
+ap.add_argument('-t', '--tiff', action='store_true')
+ap.add_argument('-p', '--save_preview', action='store_true')
 
 args = vars(ap.parse_args())
 bin_file = args['input']
@@ -150,15 +153,17 @@ for entrynum in range(int(tablelen/20)):
     tbloffset = entrynum * 20
     (imgtype, lens, shot, fileoffset, filelen) = struct.unpack_from('<HHHxxxxxxLL', oritable, offset=tbloffset)
     filestart = imgstart + fileoffset
-    if(imgtype == 1):
-        dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + "_preview.jpg"
-    elif(imgtype == 2):
-        dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + ".jpg"
-    else:
-        print("Unknown image type " + str(imgtype) + " found in ORI table in entry " + str(entrynum) + ", aborting")
-        exit(-1)
     if(filelen > 0):
-        copypart(bin_file, dest_fname, filestart, filelen)
+        if(imgtype == 1):
+            if args['save_preview']:
+                dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + "_preview.jpg"
+                copypart(bin_file, dest_fname, filestart, filelen)
+        elif(imgtype == 2):
+            dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + ".jpg"
+            copypart(bin_file, dest_fname, filestart, filelen)
+        else:
+            print("Unknown image type " + str(imgtype) + " found in ORI table in entry " + str(entrynum) + ", aborting")
+            exit(-1)
 
 #FIXME:  We are currently ignoring the last image in the ORI.  It's probably SOME sort of preview.
 #We should append the file size as the last entry in the list of occurances so the code below can handle it
