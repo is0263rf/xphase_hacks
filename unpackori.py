@@ -83,6 +83,11 @@ def parse_header(headerdata, shotnum):
                      10: 'Scan'}
     xphase_exif['Exif.Image.Model'] = xphase_models[headerdata[0]]
 
+    if(headerdata[0] == 10):
+        xphase_exif['Exif.Image.Orientation'] = 6
+    else:
+        xphase_exif['Exif.Image.Orientation'] = 0
+
     xphase_exif['Exif.Photo.ExposureProgram'] = (headerdata[0x1c] & 0x1) + 1
 
     hdr_modes = {2 : 'HDR3',
