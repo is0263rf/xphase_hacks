@@ -70,9 +70,10 @@ with open(bin_file,'rb') as myfile:
                 hfilename = 'headerdata_'+filebase+'.bin'
             else:
                 hfilename = 'headerdata.bin'
+            myfile.seek(cur_offset + 6)
+            headerdata = myfile.read(nbytes)
             with open(hfilename, 'wb') as headerfile:
-                myfile.seek(cur_offset + 6)
-                headerfile.write(myfile.read(nbytes))
+                headerfile.write(headerdata)
 
             # Everything appears to be stored as signed or maybe unsigned int32
             # Date is year, month, day, hour, minute, second starting at offset 8
