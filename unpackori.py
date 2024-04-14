@@ -23,6 +23,8 @@
 import os
 import argparse
 import struct
+from cnv_jpeg_to_dng import write_dng
+from cnv_jpeg_to_tiff import write_tiff
 
 def copypart(src,dest,start,length,bufsize=1024*1024):
     with open(src,'rb') as f1:
@@ -159,20 +161,28 @@ with open(bin_file,'rb') as myfile:
             print("\tUnknown block type" + str(blocktype))
         cur_offset += 6 + nbytes
 
-for entrynum in range(int(tablelen/20)):
-    tbloffset = entrynum * 20
-    (imgtype, lens, shot, fileoffset, filelen) = struct.unpack_from('<HHHxxxxxxLL', oritable, offset=tbloffset)
-    filestart = imgstart + fileoffset
-    if(filelen > 0):
-        if(imgtype == 1):
-            if args['save_preview']:
-                dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + "_preview.jpg"
-                copypart(bin_file, dest_fname, filestart, filelen)
-        elif(imgtype == 2):
-            dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + ".jpg"
-            copypart(bin_file, dest_fname, filestart, filelen)
-        else:
-            print("Unknown image type " + str(imgtype) + " found in ORI table in entry " + str(entrynum) + ", aborting")
-            exit(-1)
+    for entrynum in range(int(tablelen/20)):
+        tbloffset = entrynum * 20
+        (imgtype, lens, shot, fileoffset, filelen) = struct.unpack_from('<HHHxxxxxxLL', oritable, offset=tbloffset)
+        filestart = imgstart + fileoffset
+        if(filelen > 0):
+            if(imgtype == 1):
+                if args['save_preview']:
+                    dest_fname = "IMG_" + format(lens, '#02') + "_" + str(shot) + "_preview.jpg"
+                    copypart(bin_file, dest_fname, filestart, filelen)
+            elif(imgtype == 2):
+                dest_basename = "IMG_" + format(lens, '#02') + "_" + str(shot)
+                exifdata = parse_header(headerdata, shot)
+                if args['tiff']:
+                    myfile.seek(filestart)
+                    write_tiff(myfile.read(filelen), exifdata, dest_basename)
+                if args['dng']:
+                    myfile.seek(filestart)
+                    write_dng(myfile.read(filelen), exifdata, dest_basename)
+                if not conversion_mode:
+                    copypart(bin_file, dest_basename + ".jpg", filestart, filelen)
+            else:
+                print("Unknown image type " + str(imgtype) + " found in ORI table in entry " + str(entrynum) + ", aborting")
+                exit(-1)
 
 
