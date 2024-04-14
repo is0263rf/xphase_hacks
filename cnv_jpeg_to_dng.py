@@ -17,41 +17,31 @@ def cm_to_flatrational(input_array):
     retarray[1::2] = 10000
     return retarray
 
-dll_names = {'Windows' : 'libturbojpeg.dll',
-             'Linux' : 'libturbojpeg.so'}
-def init_TurboJPEG():
-    if(hasattr(sys, 'frozen')):
-        #Running under PyInstaller
-        if(getattr(sys, 'frozen') == True):
-            dll_path = os.path.join(getattr(sys, '_MEIPASS'), 'turbojpeg.libs', dll_names[platform.system()])
-            return TurboJPEG(dll_path)
+def write_dng(jpegdata, exifdata, filebase):
+    dll_names = {'Windows' : 'libturbojpeg.dll',
+                'Linux' : 'libturbojpeg.so'}
+    def init_TurboJPEG():
+        if(hasattr(sys, 'frozen')):
+            #Running under PyInstaller
+            if(getattr(sys, 'frozen') == True):
+                dll_path = os.path.join(getattr(sys, '_MEIPASS'), 'turbojpeg.libs', dll_names[platform.system()])
+                return TurboJPEG(dll_path)
+            else:
+                exit('Running under PyInstaller single-file mode not yet supported')
         else:
-            exit('Running under PyInstaller single-file mode not yet supported')
-    else:
-        return TurboJPEG()
+            return TurboJPEG()
 
-xt = XphaseTransforms()
-jpeg = init_TurboJPEG()
+    xt = XphaseTransforms()
+    jpeg = init_TurboJPEG()
 
-#DNG color matrix as SRATIONAL, pulled from an PanoManager DNG
-dng_color_matrix = [2147483647, 1268696091, -1208266623, 2147483647, -180777967, 2147483647,
-                             -826519231, 2147483647, 2147483647, 1937550026, 683803903, 2147483647,
-                             -128558463, 2147483647, 411880927, 2147483647, 2147483647, 2046508879]
+    #DNG color matrix as SRATIONAL, pulled from an PanoManager DNG
+    dng_color_matrix = [2147483647, 1268696091, -1208266623, 2147483647, -180777967, 2147483647,
+                                -826519231, 2147483647, 2147483647, 1937550026, 683803903, 2147483647,
+                                -128558463, 2147483647, 411880927, 2147483647, 2147483647, 2046508879]
 
+    dngname = filebase + '.dng'
 
-ap = argparse.ArgumentParser()
-ap.add_argument('-i', '--input', required=True,
-    help='path to input file')
-
-args = vars(ap.parse_args())
-jpeg_file = args['input']
-
-filebase = os.path.splitext(jpeg_file)[0]
-dngname = filebase + '.dng'
-
-with open(args['input'], 'rb') as jpgfile:
-    #Swap BGR to RGB
-    rgbdata = jpeg.decode(jpgfile.read(), pixel_format=TJPF_RGB)
+    rgbdata = jpeg.decode(jpegdata, pixel_format=TJPF_RGB)
 
     # It seems like every lens except 00, 01, 23, 24 are flipped upside down by PanoManager
     (garbage, lensnum, shotnum) = filebase.split("_",3)
@@ -74,3 +64,15 @@ with open(args['input'], 'rb') as jpgfile:
         dng.write(rawdata,
                 photometric=34892, #tiffile does not have enums for LinearRaw, use numeric instead
                 extratags=dng_extratags)
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument('-i', '--input', required=True,
+        help='path to input file')
+
+    args = vars(ap.parse_args())
+    jpeg_file = args['input']
+
+    filebase = os.path.splitext(jpeg_file)[0]
+    with open(jpeg_file, 'rb') as jpgfile:
+        write_dng(jpgfile.read(), {}, filebase)
