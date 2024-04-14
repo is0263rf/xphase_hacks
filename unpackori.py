@@ -116,10 +116,10 @@ ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--input', required=True,
     help='path to input file')
 
-ap.add_argument('--dateheader', action='store_true')
-ap.add_argument('-d', '--dng', action='store_true')
-ap.add_argument('-t', '--tiff', action='store_true')
-ap.add_argument('-p', '--save_preview', action='store_true')
+ap.add_argument('--dateheader', action='store_true', help='Rename header file with ORI date to help with reverse engineering')
+ap.add_argument('-d', '--dng', action='store_true', help='Output DNGs.  Will disable JPEG and raw binary output.  May be combined with -t')
+ap.add_argument('-t', '--tiff', action='store_true', help='Output TIFFs.  Will disable JPEG and raw binary output.  May be combined with -d')
+ap.add_argument('-p', '--save_preview', action='store_true', help='Save preview images when extracting JPEGs')
 
 args = vars(ap.parse_args())
 bin_file = args['input']
