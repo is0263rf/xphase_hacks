@@ -2,6 +2,7 @@
 
 import os
 import sys
+import platform
 import numpy as np
 import tifffile
 import imagecodecs
