@@ -45,7 +45,7 @@ def write_dng(jpegdata, exifdata, filebase):
 
     # It seems like every lens except 00, 01, 23, 24 are flipped upside down by PanoManager
     (garbage, lensnum, shotnum) = filebase.split("_",3)
-    if int(lensnum) not in [0, 1, 23, 24]:
+    if int(lensnum) not in [0, 1, 23, 24] and exifdata['Exif.Image.Model'] != 'Scan':
         rgbdata = np.fliplr(np.flipud(rgbdata))
 
     #Colorspace and transfer function conversion
